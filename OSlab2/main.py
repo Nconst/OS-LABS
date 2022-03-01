@@ -4,6 +4,7 @@ import itertools
 import multiprocessing
 import string
 import binascii
+import time
 from functools import partial
 from itertools import product
 
@@ -100,20 +101,28 @@ def win_init():
                 get_hash = open(sg.popup_get_file('Выберите файл с хэш значениями', title='Выбрать хэш',
                                                   file_types=(('ALL Files', '*.txt'),)), 'r')
                 hash_info = [line.rstrip() for line in get_hash]
-                print(hash_info)
                 get_hash.close()
                 explored_hash = hash_keys_layout(hash_info)
-                print(type(explored_hash))
             except (FileNotFoundError, BaseException):
                 sg.popup('Невозможно открыть файл')
 
         if event == '-1-' and explored_hash is not None:
             get_mode = sg.popup_yes_no('Запустить подбор в многопоточном режиме?', title='Выбор режима')
             if get_mode == 'Yes':
+                start = time.time()
                 shredded_value = brute_force_shredded(b'*****', binascii.unhexlify(explored_hash.encode()))
-                sg.popup(shredded_value.decode())
+                finish = time.time() - start
+
+                sg.popup(
+                    'Результат декодирования: {0}\nЗатрачено времени: {1} секунд(ы)'.format(shredded_value.decode(),
+                                                                                            finish),
+                    title='Результат декодирования')
             elif get_mode == 'No':
-                sg.popup(brute_force_mono('*****', explored_hash, verbose=False))
+                start = time.time()
+                mono_brute = brute_force_mono('*****', explored_hash, verbose=False)
+                finish = time.time() - start
+                sg.popup('Результат декодирования: {0}\nЗатрачено времени: {1} секунд(ы)'.format(mono_brute, finish),
+                         title='Результат декодирования')
 
     window.close()
 
